@@ -258,7 +258,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 408f7f1cb605be248a453106593627f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldSize: {x: 10, y: 10}
+  player: {fileID: 0}
+  worldSize: {x: 30, y: 30}
   chunkSize: {x: 30, y: 30}
   blockSize: 1
   items: []

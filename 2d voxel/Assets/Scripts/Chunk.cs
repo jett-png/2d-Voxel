@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class Chunk
 {
@@ -10,6 +9,9 @@ public class Chunk
     Vector2Int chunkCords;
 
 
+    #region Chunk Creation
+
+    //creates new chunk from new or save files
     public void Initialize(VoxelManager _VM, Vector2Int _chunkCords, int[,] _voxels)
     {
         VM = _VM;
@@ -26,16 +28,7 @@ public class Chunk
     }
 
 
-    private Vector2Int CordsToPos(Vector2Int cords)
-    {
-        Vector2Int pos = -cords + VM.chunkSize - new Vector2Int(1, 1);
-        pos += chunkCords * VM.chunkSize;
-        pos -= (VM.worldSize / 2) * VM.chunkSize;
-
-        return pos;
-    }
-
-
+    //creates a new hypathetical chunk only visible in an array of ints
     public void GenerateChunk()
     {
         for (int y = 0; y < VM.chunkSize.y; y++)
@@ -48,6 +41,7 @@ public class Chunk
     }
 
 
+    //converts the chunk data into a physical chunk
     public void DrawChunk()
     {
         int mat = 0;
@@ -69,6 +63,21 @@ public class Chunk
         }
     }
 
+    #endregion
+
+
+    #region Voxel Calculations
+
+    //converts a voxel cord to real world position
+    private Vector2Int CordsToPos(Vector2Int cords)
+    {
+        Vector2Int pos = -cords + VM.chunkSize - new Vector2Int(1, 1);
+        pos += chunkCords * VM.chunkSize;
+        pos -= (VM.worldSize / 2) * VM.chunkSize;
+
+        return pos;
+    }
+
 
     //checks if a called voxel is visible and should be drawn
     private bool VisibleCheck(Vector2Int cords)
@@ -77,12 +86,7 @@ public class Chunk
 
         //if this voxel is on the edge of the chunk, draw it
         if (chunkEdge)
-        {
             return true;
-            //the voxel is drawn in these situations because drawing 100
-            //spair voxels is less proccessing power than communicating
-            //between chunks to find out if it is visible
-        }
 
         //call all this voxel's surrounding voxels
         for (int p = 0; p < 8; p++)
@@ -96,10 +100,16 @@ public class Chunk
         //this code is only run if the voxel is not visible );
         return false;
     }
+
+    #endregion
 }
+
+#region Chunk Data
 
 //data for the save files
 public struct ChunkData
 {
     public int[,] voxels;
 }
+
+#endregion

@@ -21,6 +21,9 @@ public class WorldManager : MonoBehaviour
 
     #endregion
 
+    [Header("Global References")]
+    [NonSerialized]
+    public Transform player;
 
     [Header("Generation Settings")]
     public Vector2Int worldSize = new Vector2Int(10, 10);
@@ -42,25 +45,25 @@ public class WorldManager : MonoBehaviour
     public bool HUDShown, gizmosShown, locationShown, statsShown, spectating, godMode;
 
 
-    #region Event System
-
-    #region Events
-
-    public event Action onSave;
-
-    public void Save()
+    private void Update()
     {
-        if (onSave != null)
-        {
-            onSave();
-        }
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        Hotkeys();
     }
 
-    #endregion
 
-    #region HotKey Events
+    #region Event System
 
-    private void Update()
+    public event Action OnSave;
+    public void Save() => OnSave?.Invoke();
+
+    public event Action OnInitialize;
+    public void Initialize() => OnInitialize?.Invoke();
+
+
+    private void Hotkeys()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             gamePaused = !gamePaused;
@@ -81,8 +84,6 @@ public class WorldManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F6))
             godMode = !godMode;
     }
-
-    #endregion
 
     #endregion
 }

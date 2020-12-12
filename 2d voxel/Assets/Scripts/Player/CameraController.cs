@@ -76,7 +76,7 @@ public class CameraController : MonoBehaviour
     {
         if (target == null)
         {
-            target = GameObject.FindGameObjectWithTag("Player").transform;
+            target = WorldManager.instance.player;
             return;
         }
 
@@ -86,12 +86,7 @@ public class CameraController : MonoBehaviour
 
     public void SnapToTarget()
     {
-        if (target == null)
-        {
-            target = GameObject.FindGameObjectWithTag("Player").transform;
-            return;
-        }
-
+        target = GameObject.FindGameObjectWithTag("Player").transform;
         transform.position = target.position + offset;
     }
 
