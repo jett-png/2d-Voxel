@@ -42,9 +42,10 @@ public class Chunk
 
 
     //converts the chunk data into a physical chunk
-    public void DrawChunk()
+    public void DrawChunk(int chunkNum)
     {
         int mat = 0;
+        int[,] lightData = new int[VM.chunkSize.x, VM.chunkSize.y];
 
         for (int y = 0; y < VM.chunkSize.y; y++)
         {
@@ -54,6 +55,9 @@ public class Chunk
 
                 if (mat != 0)
                 {
+                    lightData[x, y] = 10;
+
+                    //checks if the voxel is visible before drawing it
                     if (VisibleCheck(new Vector2Int(x, y)))
                     {
                         VM.baseMap.SetTile((Vector3Int)CordsToPos(new Vector2Int(x, y)), VM.materials[mat]);
@@ -61,6 +65,9 @@ public class Chunk
                 }
             }
         }
+
+        //updates the lighting for the chunk
+        LightMap.Update(VM.chunkID[chunkNum], lightData);
     }
 
     #endregion

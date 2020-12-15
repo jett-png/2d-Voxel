@@ -1,18 +1,40 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class LightMap
+public static class LightMap
 {
-    public Texture2D texture;
+    public static Texture2D lighMapTexture;
+    public static Texture2D voxelRenderTexture;
 
-    private void UpdateTexture(Vector2Int size)
+
+    public static void Generate(Texture2D LMTexture, Texture2D VRTexture)
     {
-        texture = new Texture2D(size.x, size.y);
+        lighMapTexture = LMTexture;
+        voxelRenderTexture = VRTexture;
     }
 
-    /* 9 by 9 pixels in each block of the chunk
-     * the pixel in the center of each block is the base
-     * every pixel that isn't the base fades fades between bases
-     * 
-     */
+
+    public static void Update(Vector2Int start, int[,] lightData)
+    {
+        int width = lightData.GetLength(0);
+        int height = lightData.GetLength(1);
+
+        Color32[] colorMap = new Color32[width * height];
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Color lightLevel = Color.black;
+                lightLevel.a = lightData[width - 1 - x, height - 1 - y] / 10f;
+
+                colorMap[y * width + x] = lightLevel;
+            }
+        }
+
+        lighMapTexture.SetPixels32(start.x, start.y, width, height, colorMap);
+        lighMapTexture.Apply();
+
+        voxelRenderTexture.SetPixels32(start.x, start.y, width, height, colorMap);
+        voxelRenderTexture.Apply();
+    }
 }

@@ -6,8 +6,12 @@ public class VoxelManager : MonoBehaviour
     private Chunk[,] chunks;
 
     public Tilemap baseMap;
+    public Transform lightMap;
 
     private Transform player;
+
+    public Texture2D lightMapTexture;
+    public Texture2D VoxelRenderTexture;
 
     [System.NonSerialized]
     public Tile[] materials;
@@ -24,6 +28,19 @@ public class VoxelManager : MonoBehaviour
         new Vector2Int(1, -1),
         new Vector2Int(-1, -1)
     };
+    [System.NonSerialized]
+    public Vector2Int[] chunkID = new Vector2Int[9]
+    {
+        new Vector2Int(30, 60),
+        new Vector2Int(60, 30),
+        new Vector2Int(30, 0),
+        new Vector2Int(0, 30),
+        new Vector2Int(0, 60),
+        new Vector2Int(60, 60),
+        new Vector2Int(60, 0),
+        new Vector2Int(0, 0),
+        new Vector2Int(30, 30)
+    };
 
     [System.NonSerialized]
     public Vector2Int chunkSize, worldSize;
@@ -31,6 +48,7 @@ public class VoxelManager : MonoBehaviour
     private Vector2Int lastChunk;
 
     private bool init;
+
 
     private void Start()
     {
@@ -53,6 +71,9 @@ public class VoxelManager : MonoBehaviour
         worldSize = WorldManager.instance.worldSize;
         chunkSize = WorldManager.instance.chunkSize;
         materials = WorldManager.instance.materials;
+
+        LightMap.Generate(lightMapTexture, VoxelRenderTexture);
+
         chunks = new Chunk[worldSize.x, worldSize.y];
 
         //go through all the chunks
@@ -85,10 +106,11 @@ public class VoxelManager : MonoBehaviour
         if(lastChunk != curChunk)
         {
             baseMap.ClearAllTiles();
+            lightMap.position = ChunkToPos(curChunk);
 
-            if (curChunk.x < 0 || curChunk.x >= worldSize.x
-            || curChunk.y < 0 || curChunk.y >= worldSize.y)
-                chunks[curChunk.x, curChunk.y].DrawChunk();
+            if (curChunk.x >= 0 && curChunk.x < worldSize.x
+            && curChunk.y >= 0 && curChunk.y < worldSize.y)
+                chunks[curChunk.x, curChunk.y].DrawChunk(8);
 
             for (int p = 0; p < 8; p++)
             {
@@ -98,7 +120,7 @@ public class VoxelManager : MonoBehaviour
                 || pChunk.y < 0 || pChunk.y >= worldSize.y)
                     break;
 
-                chunks[pChunk.x, pChunk.y].DrawChunk();
+                chunks[pChunk.x, pChunk.y].DrawChunk(p);
             }
 
             lastChunk = curChunk;
@@ -118,12 +140,23 @@ public class VoxelManager : MonoBehaviour
     }
 
 
+    //converts chunk cords to a real world position
+    public Vector2 ChunkToPos(Vector2Int CC)
+    {
+        CC -= worldSize / 2;
+        CC *= chunkSize;
+        CC += chunkSize / 2;
+
+        return CC;
+    }
+
+
     //world generation algorithm
     public int AssignMat(Vector2Int pos)
     {
         int mat = 0;
 
-        if (pos.y < 1)
+        if (pos.y < Random.Range(-5,0))
             mat = 1;
 
         return mat;
