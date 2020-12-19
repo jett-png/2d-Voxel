@@ -17,29 +17,19 @@ public class VoxelManager : MonoBehaviour
     public Tile[] materials;
 
     [System.NonSerialized]
-    public Vector2Int[] touchingPos = new Vector2Int[8]
-    {
-        new Vector2Int(0, 1),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, -1),
-        new Vector2Int(-1, 0),
-        new Vector2Int(-1, 1),
-        new Vector2Int(1, 1),
-        new Vector2Int(1, -1),
-        new Vector2Int(-1, -1)
-    };
+    public Vector2Int[] neighborIndex;
     [System.NonSerialized]
     public Vector2Int[] chunkID = new Vector2Int[9]
     {
-        new Vector2Int(30, 60),
-        new Vector2Int(60, 30),
-        new Vector2Int(30, 0),
-        new Vector2Int(0, 30),
-        new Vector2Int(0, 60),
-        new Vector2Int(60, 60),
-        new Vector2Int(60, 0),
+        new Vector2Int(1, 2),
+        new Vector2Int(2, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(0, 1),
+        new Vector2Int(0, 2),
+        new Vector2Int(2, 2),
+        new Vector2Int(2, 0),
         new Vector2Int(0, 0),
-        new Vector2Int(30, 30)
+        new Vector2Int(1, 1)
     };
 
     [System.NonSerialized]
@@ -68,15 +58,21 @@ public class VoxelManager : MonoBehaviour
     //creates world from new or save files
     public void Initialize()
     {
+        //ref assignment
         worldSize = WorldManager.instance.worldSize;
         chunkSize = WorldManager.instance.chunkSize;
         materials = WorldManager.instance.materials;
+        neighborIndex = WorldManager.instance.neighborIndex;
 
+        //create arrays
+        for (int p = 0; p < chunkID.Length; p++)
+        {
+            chunkID[p] *= chunkSize;
+        }
         LightMap.Generate(lightMapTexture, VoxelRenderTexture);
-
         chunks = new Chunk[worldSize.x, worldSize.y];
 
-        //go through all the chunks
+        //init chunks
         for (int y = 0; y < worldSize.y; y++)
         {
             for (int x = 0; x < worldSize.x; x++)
@@ -114,7 +110,7 @@ public class VoxelManager : MonoBehaviour
 
             for (int p = 0; p < 8; p++)
             {
-                Vector2Int pChunk = curChunk + touchingPos[p];
+                Vector2Int pChunk = curChunk + neighborIndex[p];
 
                 if (pChunk.x < 0 || pChunk.x >= worldSize.x
                 || pChunk.y < 0 || pChunk.y >= worldSize.y)
@@ -140,6 +136,20 @@ public class VoxelManager : MonoBehaviour
     }
 
 
+    //converts a real world position to chunk cords
+    public Vector2Int PosToVoxel(Vector2 pos)
+    {
+        pos += (worldSize / 2) * chunkSize;
+        pos = new Vector2(pos.x / chunkSize.x, pos.y / chunkSize.y);
+        pos -= new Vector2((int)pos.x, (int)pos.y);
+        pos *= chunkSize;
+
+        Vector2Int cords = new Vector2Int((int)pos.x, (int)pos.y);
+
+        return cords;
+    }
+
+
     //converts chunk cords to a real world position
     public Vector2 ChunkToPos(Vector2Int CC)
     {
@@ -156,9 +166,18 @@ public class VoxelManager : MonoBehaviour
     {
         int mat = 0;
 
-        if (pos.y < Random.Range(-5,0))
+        int terrainHeight = Mathf.FloorToInt(6 * GetPerlin(new Vector2(pos.x, 0), 0, 1f)) - 3;
+
+        if (pos.y <= terrainHeight)
             mat = 1;
 
         return mat;
+    }
+
+
+    //perlin noise generator
+    public float GetPerlin(Vector2 position, float offset, float scale)
+    {
+        return Mathf.PerlinNoise((position.x + 0.1f) / chunkSize.x * scale + offset, (position.y + 0.1f) / chunkSize.x * scale + offset);
     }
 }

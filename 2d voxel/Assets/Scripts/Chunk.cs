@@ -98,7 +98,7 @@ public class Chunk
         //call all this voxel's surrounding voxels
         for (int p = 0; p < 8; p++)
         {
-            Vector2Int pPos = cords + VM.touchingPos[p];
+            Vector2Int pPos = cords + VM.neighborIndex[p];
 
             //if voxel at pPos is air, this voxel is visible
             if (voxels[pPos.x, pPos.y] == 0) return true;

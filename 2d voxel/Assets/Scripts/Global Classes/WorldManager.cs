@@ -24,6 +24,18 @@ public class WorldManager : MonoBehaviour
     [Header("Global References")]
     [NonSerialized]
     public Transform player;
+    [NonSerialized]
+    public Vector2Int[] neighborIndex = new Vector2Int[8]
+    {
+        new Vector2Int(0, 1),
+        new Vector2Int(1, 0),
+        new Vector2Int(0, -1),
+        new Vector2Int(-1, 0),
+        new Vector2Int(-1, 1),
+        new Vector2Int(1, 1),
+        new Vector2Int(1, -1),
+        new Vector2Int(-1, -1)
+    };
 
     [Header("Generation Settings")]
     public Vector2Int worldSize = new Vector2Int(10, 10);
@@ -44,6 +56,11 @@ public class WorldManager : MonoBehaviour
     //debug states
     public bool HUDShown, gizmosShown, locationShown, statsShown, spectating, godMode;
 
+
+    private void Start()
+    {
+        InvokeRepeating("WorldAnchorReset", 1f, 1f);
+    }
 
     private void Update()
     {
@@ -83,6 +100,18 @@ public class WorldManager : MonoBehaviour
             spectating = !spectating;
         if (Input.GetKeyDown(KeyCode.F6))
             godMode = !godMode;
+    }
+
+    #endregion
+
+    #region World Anchoring
+
+    private Vector3 lastPos;
+
+    private void WorldAnchorReset()
+    {
+        //reset world position for float accuracy
+        //if(lastPos)
     }
 
     #endregion
