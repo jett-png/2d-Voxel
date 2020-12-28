@@ -3,6 +3,25 @@ using UnityEngine.Tilemaps;
 
 public class VoxelManager : MonoBehaviour
 {
+    #region Instancing
+
+    public static VoxelManager instance;
+
+    private void Awake()
+    {
+        if (instance == null)
+            instance = this;
+        else if (instance != this)
+        {
+            Debug.Log("Instance already exists, destroying object");
+            Destroy(this);
+        }
+    }
+
+    #endregion
+
+    public Transform testPos;
+
     private Chunk[,] chunks;
 
     public Tilemap baseMap;
@@ -10,32 +29,14 @@ public class VoxelManager : MonoBehaviour
 
     private Transform player;
 
-    public Texture2D lightMapTexture;
-    public Texture2D VoxelRenderTexture;
+    public Texture2D lightMapTexture, voxelRenderTexture;
 
     [System.NonSerialized]
     public Tile[] materials;
 
     [System.NonSerialized]
-    public Vector2Int[] neighborIndex;
-    [System.NonSerialized]
-    public Vector2Int[] chunkID = new Vector2Int[9]
-    {
-        new Vector2Int(1, 2),
-        new Vector2Int(2, 1),
-        new Vector2Int(1, 0),
-        new Vector2Int(0, 1),
-        new Vector2Int(0, 2),
-        new Vector2Int(2, 2),
-        new Vector2Int(2, 0),
-        new Vector2Int(0, 0),
-        new Vector2Int(1, 1)
-    };
-
-    [System.NonSerialized]
     public Vector2Int chunkSize, worldSize;
     private Vector2Int curChunk;
-    private Vector2Int lastChunk;
 
     private bool init;
 
@@ -51,6 +52,14 @@ public class VoxelManager : MonoBehaviour
         if (init == false)
             return;
 
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Vector2[] pos = new Vector2[1];
+            pos[0] = testPos.position;
+
+            ClearTile(pos);
+        }
+
         ChunkManager();
     }
 
@@ -62,14 +71,13 @@ public class VoxelManager : MonoBehaviour
         worldSize = WorldManager.instance.worldSize;
         chunkSize = WorldManager.instance.chunkSize;
         materials = WorldManager.instance.materials;
-        neighborIndex = WorldManager.instance.neighborIndex;
 
         //create arrays
-        for (int p = 0; p < chunkID.Length; p++)
+        for (int p = 0; p < 9; p++)
         {
-            chunkID[p] *= chunkSize;
+            GameRef.chunkID[p] *= chunkSize;
         }
-        LightMap.Generate(lightMapTexture, VoxelRenderTexture);
+        LightMap.Generate(lightMapTexture, voxelRenderTexture);
         chunks = new Chunk[worldSize.x, worldSize.y];
 
         //init chunks
@@ -84,9 +92,39 @@ public class VoxelManager : MonoBehaviour
             }
         }
 
+        InvokeRepeating("Tick", 0.25f, 0.25f);
         init = true;
     }
 
+
+    #region Edit Voxels
+
+    public void ClearTile(Vector2[] pos)
+    {
+        foreach(Vector2 p in pos)
+        {
+            Vector2Int CC = PosToChunk(p);
+            Vector2Int VC = PosToVoxel(p);
+
+            chunks[CC.x, CC.y].voxels[VC.x, VC.y] = 0;
+        }
+    }
+
+    public void SetTile(Vector2[] pos, byte mat)
+    {
+        foreach (Vector2 p in pos)
+        {
+            Vector2Int CC = PosToChunk(p);
+            Vector2Int VC = PosToVoxel(p);
+
+            chunks[CC.x, CC.y].voxels[VC.x, VC.y] = mat;
+        }
+    }
+
+    #endregion
+
+
+    #region Chunks
 
     //loads and unloads chunks as needed
     private void ChunkManager()
@@ -96,34 +134,39 @@ public class VoxelManager : MonoBehaviour
             player = WorldManager.instance.player;
             return;
         }
-        
-        curChunk = PosToChunk(player.position);
-
-        if(lastChunk != curChunk)
-        {
-            baseMap.ClearAllTiles();
-            lightMap.position = ChunkToPos(curChunk);
-
-            if (curChunk.x >= 0 && curChunk.x < worldSize.x
-            && curChunk.y >= 0 && curChunk.y < worldSize.y)
-                chunks[curChunk.x, curChunk.y].DrawChunk(8);
-
-            for (int p = 0; p < 8; p++)
-            {
-                Vector2Int pChunk = curChunk + neighborIndex[p];
-
-                if (pChunk.x < 0 || pChunk.x >= worldSize.x
-                || pChunk.y < 0 || pChunk.y >= worldSize.y)
-                    break;
-
-                chunks[pChunk.x, pChunk.y].DrawChunk(p);
-            }
-
-            lastChunk = curChunk;
-        }
-        
     }
 
+
+    private void Tick()
+    {
+        #region Chunk Updates
+
+        curChunk = PosToChunk(player.position);
+        lightMap.position = ChunkToPos(curChunk);
+        baseMap.ClearAllTiles();
+
+        if (curChunk.x >= 0 && curChunk.x < worldSize.x
+        && curChunk.y >= 0 && curChunk.y < worldSize.y)
+            chunks[curChunk.x, curChunk.y].DrawChunk(8);
+
+        for (int p = 0; p < 8; p++)
+        {
+            Vector2Int pChunk = curChunk + GameRef.neighborIndex[p];
+
+            if (pChunk.x < 0 || pChunk.x >= worldSize.x
+            || pChunk.y < 0 || pChunk.y >= worldSize.y)
+                break;
+
+            chunks[pChunk.x, pChunk.y].DrawChunk(p);
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+
+    #region Position Conversions
 
     //converts a real world position to chunk cords
     public Vector2Int PosToChunk(Vector2 pos)
@@ -144,7 +187,7 @@ public class VoxelManager : MonoBehaviour
         pos -= new Vector2((int)pos.x, (int)pos.y);
         pos *= chunkSize;
 
-        Vector2Int cords = new Vector2Int((int)pos.x, (int)pos.y);
+        Vector2Int cords = new Vector2Int(chunkSize.x - 1 - (int)pos.x, chunkSize.y - 1 - (int)pos.y);
 
         return cords;
     }
@@ -160,11 +203,15 @@ public class VoxelManager : MonoBehaviour
         return CC;
     }
 
+    #endregion
+    
+
+    #region Terrain Generation
 
     //world generation algorithm
-    public int AssignMat(Vector2Int pos)
+    public byte AssignMat(Vector2Int pos)
     {
-        int mat = 0;
+        byte mat = 0;
 
         int terrainHeight = Mathf.FloorToInt(6 * GetPerlin(new Vector2(pos.x, 0), 0, 1f)) - 3;
 
@@ -180,4 +227,6 @@ public class VoxelManager : MonoBehaviour
     {
         return Mathf.PerlinNoise((position.x + 0.1f) / chunkSize.x * scale + offset, (position.y + 0.1f) / chunkSize.x * scale + offset);
     }
+
+    #endregion
 }

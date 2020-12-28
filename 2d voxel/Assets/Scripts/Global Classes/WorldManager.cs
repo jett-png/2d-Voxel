@@ -38,11 +38,8 @@ public class WorldManager : MonoBehaviour
     };
 
     [Header("Generation Settings")]
-    public Vector2Int worldSize = new Vector2Int(10, 10);
-    public Vector2Int chunkSize = new Vector2Int(10, 10);
-
-    [Range(0.1f,2f)]
-    public float blockSize = 1;
+    public Vector2Int worldSize = new Vector2Int(30, 30);
+    public Vector2Int chunkSize = new Vector2Int(30, 30);
 
 
     [Header("Global Lists")]
@@ -55,12 +52,6 @@ public class WorldManager : MonoBehaviour
 
     //debug states
     public bool HUDShown, gizmosShown, locationShown, statsShown, spectating, godMode;
-
-
-    private void Start()
-    {
-        InvokeRepeating("WorldAnchorReset", 1f, 1f);
-    }
 
     private void Update()
     {
@@ -100,18 +91,6 @@ public class WorldManager : MonoBehaviour
             spectating = !spectating;
         if (Input.GetKeyDown(KeyCode.F6))
             godMode = !godMode;
-    }
-
-    #endregion
-
-    #region World Anchoring
-
-    private Vector3 lastPos;
-
-    private void WorldAnchorReset()
-    {
-        //reset world position for float accuracy
-        //if(lastPos)
     }
 
     #endregion

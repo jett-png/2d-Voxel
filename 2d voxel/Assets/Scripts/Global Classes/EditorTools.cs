@@ -4,14 +4,14 @@ using UnityEditor;
 
 namespace EditorTools
 {
-    [CustomEditor(typeof(CameraController))]
+    [CustomEditor(typeof(CameraCtrl))]
     public class Camera : Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
 
-            CameraController cam = (CameraController)target;
+            CameraCtrl cam = (CameraCtrl)target;
 
             if (GUILayout.Button("Locate Player"))
                 cam.SnapToTarget();

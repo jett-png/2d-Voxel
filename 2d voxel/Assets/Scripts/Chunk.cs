@@ -4,7 +4,7 @@ public class Chunk
 {
     VoxelManager VM;
 
-    public int[,] voxels;
+    public byte[,] voxels;
 
     Vector2Int chunkCords;
 
@@ -12,7 +12,7 @@ public class Chunk
     #region Chunk Creation
 
     //creates new chunk from new or save files
-    public void Initialize(VoxelManager _VM, Vector2Int _chunkCords, int[,] _voxels)
+    public void Initialize(VoxelManager _VM, Vector2Int _chunkCords, byte[,] _voxels)
     {
         VM = _VM;
 
@@ -22,7 +22,7 @@ public class Chunk
             voxels = _voxels;
         else
         {
-            voxels = new int[VM.chunkSize.x, VM.chunkSize.y];
+            voxels = new byte[VM.chunkSize.x, VM.chunkSize.y];
             GenerateChunk();
         }
     }
@@ -45,7 +45,7 @@ public class Chunk
     public void DrawChunk(int chunkNum)
     {
         int mat = 0;
-        int[,] lightData = new int[VM.chunkSize.x, VM.chunkSize.y];
+        byte[,] lightData = new byte[VM.chunkSize.x, VM.chunkSize.y];
 
         for (int y = 0; y < VM.chunkSize.y; y++)
         {
@@ -67,8 +67,15 @@ public class Chunk
         }
 
         //updates the lighting for the chunk
-        LightMap.Update(VM.chunkID[chunkNum], lightData);
+        LightMap.Update(GameRef.chunkID[chunkNum], lightData);
     }
+
+    #endregion
+
+
+    #region Chunk Updating
+
+
 
     #endregion
 
@@ -98,7 +105,7 @@ public class Chunk
         //call all this voxel's surrounding voxels
         for (int p = 0; p < 8; p++)
         {
-            Vector2Int pPos = cords + VM.neighborIndex[p];
+            Vector2Int pPos = cords + GameRef.neighborIndex[p];
 
             //if voxel at pPos is air, this voxel is visible
             if (voxels[pPos.x, pPos.y] == 0) return true;
@@ -116,7 +123,7 @@ public class Chunk
 //data for the save files
 public struct ChunkData
 {
-    public int[,] voxels;
+    public byte[,] voxels;
 }
 
 #endregion

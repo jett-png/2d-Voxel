@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraCtrl : MonoBehaviour
 {
     [Header("Target Follow")]
     private Transform target;

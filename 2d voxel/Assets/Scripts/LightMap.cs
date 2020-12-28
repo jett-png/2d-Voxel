@@ -13,7 +13,7 @@ public static class LightMap
     }
 
 
-    public static void Update(Vector2Int start, int[,] lightData)
+    public static void Update(Vector2Int start, byte[,] lightData)
     {
         int width = lightData.GetLength(0);
         int height = lightData.GetLength(1);

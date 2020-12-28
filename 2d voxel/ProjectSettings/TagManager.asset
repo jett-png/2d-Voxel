@@ -41,6 +41,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Player
+    uniqueID: 4261836275
+    locked: 0
   - name: Lighting
     uniqueID: 4176199093
     locked: 0
