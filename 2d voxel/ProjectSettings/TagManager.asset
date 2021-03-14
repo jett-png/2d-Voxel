@@ -44,6 +44,12 @@ TagManager:
   - name: Player
     uniqueID: 4261836275
     locked: 0
+  - name: Effects
+    uniqueID: 2120625181
+    locked: 0
   - name: Lighting
     uniqueID: 4176199093
+    locked: 0
+  - name: UI
+    uniqueID: 3550821375
     locked: 0

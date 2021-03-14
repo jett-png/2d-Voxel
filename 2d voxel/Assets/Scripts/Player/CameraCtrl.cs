@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class CameraCtrl : MonoBehaviour
 {
+    #region Data
     [Header("Target Follow")]
     private Transform target;
 
@@ -14,82 +13,61 @@ public class CameraCtrl : MonoBehaviour
 
 
     [Header("Spectator")]
-    private Rigidbody2D rb;
-
-    private Vector2 movInput;
-
     public float speed;
 
+    private bool movInput;
+    private bool init;
+    #endregion
 
-    void Start()
+
+    #region Behavior
+
+    #region Initialize
+    public void Initialize()
     {
-        rb = GetComponent<Rigidbody2D>();
+        PlayerInputs.instance.PIA.standard.Run.performed += ctx => movInput = true;
+        PlayerInputs.instance.PIA.standard.Run.performed += ctx => movInput = false;
+
+        target = GameRef.player;
+
         curSpeed = speed;
+        init = true;
     }
+    #endregion
 
-    void Update()
+
+    #region Spectator - Free Move
+    private float curSpeed;
+
+    private void Update()
     {
-        if (WorldManager.instance.spectating)
-        {
-            MoveInput();
-            return;
-        }
+        if (!init) return;
+
+        if (movInput)
+            FreeMove();
     }
 
+    private void FreeMove()
+    {
+        //rb.velocity = PlayerInputs.instance.run * curSpeed;
+    }
+    #endregion
+
+
+    #region Target Follow - Locked Move
     private void FixedUpdate()
     {
-        if (WorldManager.instance.spectating)
-        {
-            MoveAction();
-            return;
-        }
+        if (!init) return;
 
         FollowTarget();
     }
 
-
-    #region Spectator - Free Move
-
-    private float curSpeed;
-
-    private void MoveInput()
-    {
-        movInput.x = Input.GetAxis("Horizontal");
-        movInput.y = Input.GetAxis("Vertical");
-
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-            curSpeed = speed * 2;
-        else if (Input.GetKeyUp(KeyCode.LeftShift))
-            curSpeed = speed;
-    }
-
-    private void MoveAction()
-    {
-        rb.velocity = movInput * curSpeed;
-    }
-
-    #endregion
-
-    #region Target Follow - Locked Move
-
     public void FollowTarget()
     {
-        if (target == null)
-        {
-            target = WorldManager.instance.player;
-            return;
-        }
-
         Vector3 desiredPos = target.position + offset;
         transform.position = Vector3.SmoothDamp(transform.position, desiredPos, ref smoothSpeed, timeOffset);
     }
-
-    public void SnapToTarget()
-    {
-        target = GameObject.FindGameObjectWithTag("Player").transform;
-        transform.position = target.position + offset;
-    }
-
     #endregion
 
+    #endregion
 }

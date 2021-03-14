@@ -1,19 +1,19 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerCtrl : MonoBehaviour
 {
+    #region Data
     //ref
-    private VoxelManager VM;
     private Rigidbody2D rb;
 
     //running
     public float speed;
-    private int runInput;
 
     //jumping
     public float jumpForce;
     private float jumpCooldown;
-    private bool jumpInput;
+    private bool jumpTrigger;
     private bool jumping;
 
     //grounded
@@ -23,37 +23,61 @@ public class PlayerCtrl : MonoBehaviour
     public float groundHeight;
     private bool grounded;
 
+    //voxel editing
+    private bool breaking;
+    private bool building;
+    #endregion
 
-    private void Start()
+
+    #region Behavior
+
+    #region Initialize
+    private bool init;
+
+    public void Initialize()
     {
-        VM = VoxelManager.instance;
         rb = GetComponent<Rigidbody2D>();
 
+        PlayerInputs.instance.PIA.standard.Jump.performed += ctx => JumpInput();
+        PlayerInputs.instance.PIA.standard.Trigger1.performed += ctx => breaking = true;
+        PlayerInputs.instance.PIA.standard.Trigger1.canceled += ctx => breaking = false;
+        PlayerInputs.instance.PIA.standard.Trigger2.performed += ctx => building = true;
+        PlayerInputs.instance.PIA.standard.Trigger2.canceled += ctx => building = false;
+        
         groundOffset = new Vector2(0, groundHeight);
-    }
 
+        init = true;
+    }
+    #endregion
+
+
+    #region Updates
     private void Update()
     {
-        Inputs();
+        if (!init) return;
+
+        if (breaking) Break();
+        if (building) Build();
+
         GroundDetection();
-        EditWorld();
     }
 
     private void FixedUpdate()
     {
-        Move();
-    }
+        if (!init) return;
 
-    private void Inputs()
+        Run();
+    }
+    #endregion
+
+
+    #region Player Capabilities
+
+    #region Move
+    private void JumpInput()
     {
-        runInput = (int)Input.GetAxisRaw("Horizontal");
-
-        if (Input.GetButtonDown("Jump") && grounded && !jumping)
-        {
-            jumpInput = true;
-        }
+        if (grounded && !jumping) jumpTrigger = true;
     }
-    
 
     private void GroundDetection()
     {
@@ -68,42 +92,31 @@ public class PlayerCtrl : MonoBehaviour
             jumpCooldown = 0;
         }
     }
+
+    private void OnDrawGizmosSelected() => Gizmos.DrawWireCube(transform.position + new Vector3(0, groundHeight), groundSize);
+
     
-    
-    private void Move()
+    private void Run()
     {
-        Vector3 runV = new Vector3(speed * runInput, rb.velocity.y);
+        Vector3 runV = new Vector3(speed * PlayerInputs.instance.run, rb.velocity.y);
         rb.velocity = Vector3.Lerp(rb.velocity, runV, 0.1f);
 
-        if (jumpInput && grounded && !jumping)
+        if (jumpTrigger && grounded && !jumping)
         {
             rb.AddForce(transform.up * jumpForce * 100);
-            jumpInput = false;
+            jumpTrigger = false;
             jumping = true;
         }
     }
+    #endregion
 
 
-    private void EditWorld()
-    {
-        if (Input.GetButtonDown("Fire1") || Input.GetButtonDown("Fire2"))
-        {
-            Vector2 mousePos = GameRef.cursorPos;
-            Vector2[] pos = new Vector2[1];
-            pos[0] = mousePos;
+    #region World Editing
+    private void Build() => BlockManager.instance.SetTile(GameRef.cursor.position, 2);
+    private void Break() => BlockManager.instance.SetTile(GameRef.cursor.position, 0);
+    #endregion
 
-            if(Input.GetButtonDown("Fire1"))
-                VM.ClearTile(pos);
+    #endregion
 
-            if (Input.GetButtonDown("Fire2"))
-                VM.SetTile(pos, 1);
-        }
-    }
-
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = new Color(1, 0, 1, 0.5f);
-        Gizmos.DrawWireCube(transform.position + new Vector3(0, groundHeight), groundSize);
-    }
+    #endregion
 }
